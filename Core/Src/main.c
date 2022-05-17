@@ -40,10 +40,10 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define JEU_ACCUEIL 0;
-#define JEU_TIMERST 1;
-#define JEU_PARTIES 2;
-#define JEU_FINPART 3;
+#define JEU_ACCUEIL 0
+#define JEU_TIMERST 1
+#define JEU_PARTIES 2
+#define JEU_FINPART 3
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -285,19 +285,19 @@ int main(void)
 
   /* definition and creation of AffichageJeu */
   osThreadDef(AffichageJeu, displayGame, osPriorityNormal, 0, 1024);
-  AffichageJeuHandle = osThreadCreate(osThread(AffichageJeu), NULL);
+  //AffichageJeuHandle = osThreadCreate(osThread(AffichageJeu), NULL);
 
   /* definition and creation of GameOver */
   osThreadDef(GameOver, waitGameOver, osPriorityHigh, 0, 1024);
-  GameOverHandle = osThreadCreate(osThread(GameOver), NULL);
+  //GameOverHandle = osThreadCreate(osThread(GameOver), NULL);
 
   /* definition and creation of TacheMonocycle */
   osThreadDef(TacheMonocycle, obj_cycle, osPriorityNormal, 0, 1024);
-  TacheMonocycleHandle = osThreadCreate(osThread(TacheMonocycle), NULL);
+  //TacheMonocycleHandle = osThreadCreate(osThread(TacheMonocycle), NULL);
 
   /* definition and creation of TacheEpee */
   osThreadDef(TacheEpee, obj_sword, osPriorityNormal, 0, 1024);
-  TacheEpeeHandle = osThreadCreate(osThread(TacheEpee), NULL);
+  //TacheEpeeHandle = osThreadCreate(osThread(TacheEpee), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -1634,9 +1634,93 @@ static void MX_GPIO_Init(void)
 void StartDefaultTask(void const * argument)
 {
   /* USER CODE BEGIN 5 */
+	uint8_t old_state = 99;
+	uint8_t timers = 90;
+	char text[50];
+	static uint8_t ligne = 7;
+	static TS_StateTypeDef  TS_State;
   /* Infinite loop */
   for(;;)
   {
+	  if (old_state != stateEtat)
+	  {
+		  switch (stateEtat)
+		  {
+		  	  case JEU_ACCUEIL:
+		  		  xSemaphoreTake(mutexScreenHandle,portMAX_DELAY);
+		  		  BSP_LCD_SelectLayer(1);
+		  		  BSP_LCD_Clear(00);
+		  		  BSP_LCD_SelectLayer(0);
+		  		  BSP_LCD_Clear(00);
+		  		  BSP_LCD_DrawBitmap(0, 0,(uint8_t*)AmoBloc2_Main_bmp);
+		  		  BSP_LCD_SelectLayer(1);
+		  		  xSemaphoreGive(mutexScreenHandle);
+		  		  break;
+		  	  case JEU_TIMERST:
+		  		xSemaphoreTake(mutexScreenHandle,portMAX_DELAY);
+		  		BSP_LCD_SelectLayer(1);
+		  		BSP_LCD_Clear(00);
+		  		BSP_LCD_SelectLayer(0);
+		  		BSP_LCD_Clear(00);
+		  		BSP_LCD_DrawBitmap(0, 0,(uint8_t*)AmoBloc2_Timer_bmp);
+		  		BSP_LCD_SelectLayer(1);
+		  		BSP_LCD_SetFont(&Font24);
+		  		BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+		  		sprintf(text,"Temps : %u secondes", timers);
+		  		BSP_LCD_DisplayStringAt(10,ligne*24-10,(uint8_t*) text,CENTER_MODE);
+		  		xSemaphoreGive(mutexScreenHandle);
+		  		break;
+		  	  case JEU_PARTIES:
+		  		  /* definition and creation of AffichageJeu */
+		  		  //osThreadDef(AffichageJeu, displayGame, osPriorityNormal, 0, 1024);
+		  		  //AffichageJeuHandle = osThreadCreate(osThread(AffichageJeu), NULL);
+
+		  		  /* definition and creation of GameOver */
+		  		  //osThreadDef(GameOver, waitGameOver, osPriorityHigh, 0, 1024);
+		  		  //GameOverHandle = osThreadCreate(osThread(GameOver), NULL);
+
+		  		  /* definition and creation of TacheMonocycle */
+		  		  //osThreadDef(TacheMonocycle, obj_cycle, osPriorityNormal, 0, 1024);
+		  		  //TacheMonocycleHandle = osThreadCreate(osThread(TacheMonocycle), NULL);
+
+		  		  /* definition and creation of TacheEpee */
+		  		  //osThreadDef(TacheEpee, obj_sword, osPriorityNormal, 0, 1024);
+		  		  //TacheEpeeHandle = osThreadCreate(osThread(TacheEpee), NULL);
+		  		  break;
+		  	  case JEU_FINPART:
+		  		xSemaphoreTake(mutexScreenHandle,portMAX_DELAY);
+		  		BSP_LCD_SelectLayer(1);
+		  		BSP_LCD_Clear(00);
+		  		BSP_LCD_SelectLayer(0);
+		  		BSP_LCD_Clear(00);
+		  		BSP_LCD_DrawBitmap(0, 0,(uint8_t*)AmoBloc2_Over_bmp);
+		  		BSP_LCD_SelectLayer(1);
+		  		BSP_LCD_SetFont(&Font24);
+		  		BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+		  		sprintf(text,"Score : %u", score);
+		  		BSP_LCD_DisplayStringAt(0,ligne*24-10,(uint8_t*) text,CENTER_MODE);
+		  		xSemaphoreGive(mutexScreenHandle);
+		  		break;
+		  }
+		  old_state = stateEtat;
+	  }
+	  switch (stateEtat) {
+	  	  case JEU_ACCUEIL:
+	  		BSP_TS_GetState(&TS_State);
+	  		if (TS_State.touchDetected) {
+	  			if(TS_State.touchX[0] > 20 && TS_State.touchY[0] > 125 && TS_State.touchX[0] < 230 && TS_State.touchY[0] < 210)
+	  			{
+	  				stateEtat = JEU_PARTIES;
+	  			}
+	  			if(TS_State.touchX[0] > 250 && TS_State.touchY[0] > 125 && TS_State.touchX[0] < 460 && TS_State.touchY[0] < 210)
+	  			{
+	  				stateEtat = JEU_TIMERST;
+	  			}
+	  		}
+	  		break;
+	  	  case JEU_PARTIES:
+	  		stateEtat = JEU_FINPART;
+	  }
     osDelay(1);
   }
   /* USER CODE END 5 */
@@ -1763,6 +1847,7 @@ void waitGameOver(void const * argument)
 	  			  xSemaphoreGive(mutexScreenHandle);
 	  			vTaskDelete(TacheEpeeHandle);
 	  			temp = 0;
+	  			stateEtat = JEU_FINPART;
 	  			  break;
 	  		  }
 	  	  }
