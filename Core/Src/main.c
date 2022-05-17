@@ -139,6 +139,8 @@ void CallbackLED(void const * argument);
 uint16_t score;
 uint8_t stateEtat;
 uint8_t vitesse;
+uint8_t timed;
+uint8_t parties;
 /* USER CODE END 0 */
 
 /**
@@ -151,6 +153,7 @@ int main(void)
 	stateEtat = JEU_ACCUEIL;
 	score = 0;
 	vitesse = 1;
+	parties = 0;
 	char text[50]={};
 	char textFromUart0[50]={};
 	static TS_StateTypeDef  TS_State;
@@ -244,8 +247,8 @@ int main(void)
 
   /* Create the timer(s) */
   /* definition and creation of TimerAffichage */
-  osTimerDef(TimerAffichage, CallbackDisplay);
-  TimerAffichageHandle = osTimerCreate(osTimer(TimerAffichage), osTimerOnce, NULL);
+  //osTimerDef(TimerAffichage, CallbackDisplay);
+  //TimerAffichageHandle = osTimerCreate(osTimer(TimerAffichage), osTimerOnce, NULL);
 
   /* definition and creation of TimerLED */
   osTimerDef(TimerLED, CallbackLED);
@@ -253,7 +256,7 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_TIMERS */
   osTimerStart(TimerLEDHandle,1000);
-  osTimerStart(TimerAffichageHandle,5000);
+  //osTimerStart(TimerAffichageHandle,5000);
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
 
@@ -276,27 +279,27 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 1024);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityHigh, 0, 1024);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* definition and creation of AffichageHeure */
-  osThreadDef(AffichageHeure, displayTime, osPriorityNormal, 0, 1024);
-  AffichageHeureHandle = osThreadCreate(osThread(AffichageHeure), NULL);
+  //osThreadDef(AffichageHeure, displayTime, osPriorityNormal, 0, 1024);
+  //AffichageHeureHandle = osThreadCreate(osThread(AffichageHeure), NULL);
 
   /* definition and creation of AffichageJeu */
-  osThreadDef(AffichageJeu, displayGame, osPriorityNormal, 0, 1024);
+  //osThreadDef(AffichageJeu, displayGame, osPriorityNormal, 0, 1024);
   //AffichageJeuHandle = osThreadCreate(osThread(AffichageJeu), NULL);
 
   /* definition and creation of GameOver */
-  osThreadDef(GameOver, waitGameOver, osPriorityHigh, 0, 1024);
+  //osThreadDef(GameOver, waitGameOver, osPriorityHigh, 0, 1024);
   //GameOverHandle = osThreadCreate(osThread(GameOver), NULL);
 
   /* definition and creation of TacheMonocycle */
-  osThreadDef(TacheMonocycle, obj_cycle, osPriorityNormal, 0, 1024);
+  //osThreadDef(TacheMonocycle, obj_cycle, osPriorityNormal, 0, 1024);
   //TacheMonocycleHandle = osThreadCreate(osThread(TacheMonocycle), NULL);
 
   /* definition and creation of TacheEpee */
-  osThreadDef(TacheEpee, obj_sword, osPriorityNormal, 0, 1024);
+  //osThreadDef(TacheEpee, obj_sword, osPriorityNormal, 0, 1024);
   //TacheEpeeHandle = osThreadCreate(osThread(TacheEpee), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -1644,6 +1647,12 @@ void StartDefaultTask(void const * argument)
 	sConfig.Rank = ADC_REGULAR_RANK_1;
 	sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
 	potlb = 0;
+	osTimerDef(TimerAffichage, CallbackDisplay);
+	osThreadDef(AffichageJeu, displayGame, osPriorityNormal, 0, 1024);
+	osThreadDef(GameOver, waitGameOver, osPriorityHigh, 0, 1024);
+	osThreadDef(TacheMonocycle, obj_cycle, osPriorityNormal, 0, 1024);
+	osThreadDef(AffichageHeure, displayTime, osPriorityNormal, 0, 1024);
+  	osThreadDef(TacheEpee, obj_sword, osPriorityNormal, 0, 1024);
   /* Infinite loop */
   for(;;)
   {
@@ -1676,23 +1685,33 @@ void StartDefaultTask(void const * argument)
 		  		xSemaphoreGive(mutexScreenHandle);
 		  		break;
 		  	  case JEU_PARTIES:
+		  		  parties++;
+		  		  score = 0;
+		  		  if (timed) {
+		  			  	TimerAffichageHandle = osTimerCreate(osTimer(TimerAffichage), osTimerOnce, NULL);
+		  				osTimerStart(TimerAffichageHandle,1000*timers);
+		  		  }
+		  		  xQueueReset(swordsPosHandle);
+		  		  xQueueReset(collideFlagHandle);
+		  		  xQueueReset(scoreIncremHandle);
 		  		  /* definition and creation of AffichageJeu */
-		  		  //osThreadDef(AffichageJeu, displayGame, osPriorityNormal, 0, 1024);
-		  		  //AffichageJeuHandle = osThreadCreate(osThread(AffichageJeu), NULL);
-
+		  		  AffichageJeuHandle = osThreadCreate(osThread(AffichageJeu), NULL);
 		  		  /* definition and creation of GameOver */
-		  		  //osThreadDef(GameOver, waitGameOver, osPriorityHigh, 0, 1024);
-		  		  //GameOverHandle = osThreadCreate(osThread(GameOver), NULL);
-
+		  		  GameOverHandle = osThreadCreate(osThread(GameOver), NULL);
 		  		  /* definition and creation of TacheMonocycle */
-		  		  //osThreadDef(TacheMonocycle, obj_cycle, osPriorityNormal, 0, 1024);
-		  		  //TacheMonocycleHandle = osThreadCreate(osThread(TacheMonocycle), NULL);
-
+		  		  TacheMonocycleHandle = osThreadCreate(osThread(TacheMonocycle), NULL);
+		  		  AffichageHeureHandle = osThreadCreate(osThread(AffichageHeure), NULL);
 		  		  /* definition and creation of TacheEpee */
-		  		  //osThreadDef(TacheEpee, obj_sword, osPriorityNormal, 0, 1024);
-		  		  //TacheEpeeHandle = osThreadCreate(osThread(TacheEpee), NULL);
+		  		  TacheEpeeHandle = osThreadCreate(osThread(TacheEpee), NULL);
 		  		  break;
 		  	  case JEU_FINPART:
+		  		if (timed) {
+		  			if (timed == 1) {
+		  				osTimerStop(TimerAffichageHandle);
+		  			}
+		  			osTimerDelete(TimerAffichageHandle);
+		  			timed = 0;
+		  		}
 		  		xSemaphoreTake(mutexScreenHandle,portMAX_DELAY);
 		  		BSP_LCD_SelectLayer(1);
 		  		BSP_LCD_Clear(00);
@@ -1705,6 +1724,9 @@ void StartDefaultTask(void const * argument)
 		  		sprintf(text,"Score : %u", score);
 		  		BSP_LCD_DisplayStringAt(0,ligne*24-10,(uint8_t*) text,CENTER_MODE);
 		  		xSemaphoreGive(mutexScreenHandle);
+		  		vTaskDelete(AffichageJeuHandle);
+		  		vTaskDelete(AffichageHeureHandle);
+		  		vTaskDelete(TacheMonocycleHandle);
 		  		break;
 		  }
 		  old_state = stateEtat;
@@ -1747,11 +1769,11 @@ void StartDefaultTask(void const * argument)
 	  			if(TS_State.touchX[0] > 410 && TS_State.touchY[0] > 205 && TS_State.touchX[0] < 470 && TS_State.touchY[0] < 260)
 	  			{
 	  			  	stateEtat = JEU_PARTIES;
+	  			  	timed = 1;
 	  			}
 	  		}
 	  		  break;
 	  	  case JEU_PARTIES:
-	  		stateEtat = JEU_FINPART;
 	  		break;
 	  	  case JEU_FINPART:
 	  		BSP_TS_GetState(&TS_State);
@@ -1785,6 +1807,7 @@ void displayTime(void const * argument)
   for(;;)
   {
 	  xSemaphoreTake(mutexScreenHandle,portMAX_DELAY);
+	  BSP_LCD_SetFont(&Font12);
 	  HAL_RTC_GetTime(&hrtc, &time, RTC_FORMAT_BIN);
 	  HAL_RTC_GetDate(&hrtc, &date, RTC_FORMAT_BIN);
 	  sprintf(text, "%2u:%02u:%02u", time.Hours, time.Minutes, time.Seconds);
@@ -1881,15 +1904,10 @@ void waitGameOver(void const * argument)
 	  			  TacheEpeeHandle = osThreadCreate(osThread(TacheEpee), NULL);
 	  			 temp = 0;
 	  		  } else if (temp == 30) {
-	  			  xSemaphoreTake(mutexScreenHandle,portMAX_DELAY);
-	  			  sprintf(text, "GAME OVER");
-	  			  BSP_LCD_SelectLayer(1);
-	  			  BSP_LCD_DisplayStringAtLine(3,(uint8_t*) text);
-	  			  BSP_LCD_SelectLayer(1);
-	  			  xSemaphoreGive(mutexScreenHandle);
+	  			  stateEtat = JEU_FINPART;
+	  			vTaskDelete(NULL);
 	  			vTaskDelete(TacheEpeeHandle);
 	  			temp = 0;
-	  			stateEtat = JEU_FINPART;
 	  			  break;
 	  		  }
 	  	  }
@@ -1965,6 +1983,10 @@ void obj_sword(void const * argument)
   /* Infinite loop */
   for(;;)
   {
+	  if (stateEtat != JEU_PARTIES)
+	  {
+		  vTaskDelete(NULL);
+	  }
 	  xSemaphoreTake(mutexScreenHandle,portMAX_DELAY);
 	  BSP_LCD_SelectLayer(0);
 	  BSP_LCD_SetTextColor(LCD_COLOR_AMONGUS);
@@ -1979,10 +2001,6 @@ void obj_sword(void const * argument)
 	  }
 	  if (posy > BSP_LCD_GetYSize()-29)
 	  {
-		  sprintf(text, "OK");
-		  BSP_LCD_SelectLayer(1);
-		  BSP_LCD_DisplayStringAtLine(7,(uint8_t*) text);
-		  BSP_LCD_SelectLayer(1);
 
   		  xSemaphoreTake(mutexScreenHandle,portMAX_DELAY);
   		  BSP_LCD_SelectLayer(0);
@@ -2008,10 +2026,12 @@ void obj_sword(void const * argument)
 void CallbackDisplay(void const * argument)
 {
   /* USER CODE BEGIN CallbackDisplay */
-	char text[50];
-	static uint8_t ligne = 10;
-		sprintf(text,"CONGRATS !");
-		BSP_LCD_DisplayStringAt(0,ligne*12,(uint8_t*) text,RIGHT_MODE);
+	stateEtat = JEU_FINPART;
+	timed = 2;
+	//char text[50];
+	//static uint8_t ligne = 10;
+	//sprintf(text,"CONGRATS !");
+	//BSP_LCD_DisplayStringAt(0,ligne*12,(uint8_t*) text,RIGHT_MODE);
   /* USER CODE END CallbackDisplay */
 }
 
