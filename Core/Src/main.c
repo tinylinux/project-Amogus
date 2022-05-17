@@ -1697,12 +1697,12 @@ void StartDefaultTask(void const * argument)
 		  		  /* definition and creation of AffichageJeu */
 		  		  AffichageJeuHandle = osThreadCreate(osThread(AffichageJeu), NULL);
 		  		  /* definition and creation of GameOver */
+		  		  TacheEpeeHandle = osThreadCreate(osThread(TacheEpee), NULL);
+		  		  TacheMonocycleHandle = osThreadCreate(osThread(TacheMonocycle), NULL);
 		  		  GameOverHandle = osThreadCreate(osThread(GameOver), NULL);
 		  		  /* definition and creation of TacheMonocycle */
-		  		  TacheMonocycleHandle = osThreadCreate(osThread(TacheMonocycle), NULL);
 		  		  AffichageHeureHandle = osThreadCreate(osThread(AffichageHeure), NULL);
 		  		  /* definition and creation of TacheEpee */
-		  		  TacheEpeeHandle = osThreadCreate(osThread(TacheEpee), NULL);
 		  		  break;
 		  	  case JEU_FINPART:
 		  		if (timed) {
@@ -2026,6 +2026,8 @@ void obj_sword(void const * argument)
 void CallbackDisplay(void const * argument)
 {
   /* USER CODE BEGIN CallbackDisplay */
+	uint16_t incr = 30;
+	xQueueSend(scoreIncremHandle, &incr, 0);
 	stateEtat = JEU_FINPART;
 	timed = 2;
 	//char text[50];
