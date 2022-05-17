@@ -1433,8 +1433,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF12_SDMMC1;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : BP2_Pin BP1_Pin PA6 */
-  GPIO_InitStruct.Pin = BP2_Pin|BP1_Pin|GPIO_PIN_6;
+  /*Configure GPIO pins : BP2_Pin PA6 */
+  GPIO_InitStruct.Pin = BP2_Pin|GPIO_PIN_6;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -1552,6 +1552,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : BP1_Pin */
+  GPIO_InitStruct.Pin = BP1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(BP1_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pin : LCD_INT_Pin */
   GPIO_InitStruct.Pin = LCD_INT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_EVT_RISING;
@@ -1621,10 +1627,37 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF10_OTG_HS;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	if (GPIO_Pin == BP1_Pin)
+	{
+		switch (stateEtat)
+		{
+			case JEU_PARTIES:
+				vitesse <<= 1;
+				if (vitesse > 8)
+				{
+					vitesse = 1;
+				}
+				break;
+			case JEU_TIMERST:
+				stateEtat = JEU_PARTIES;
+				timed = 1;
+				break;
+			case JEU_FINPART:
+				stateEtat = JEU_ACCUEIL;
+				break;
+		}
 
+	}
+}
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -1685,6 +1718,7 @@ void StartDefaultTask(void const * argument)
 		  		xSemaphoreGive(mutexScreenHandle);
 		  		break;
 		  	  case JEU_PARTIES:
+		  		  vitesse = 1;
 		  		  parties++;
 		  		  score = 0;
 		  		  if (timed) {
@@ -1898,7 +1932,7 @@ void waitGameOver(void const * argument)
 	  			BSP_LCD_Clear(LCD_COLOR_AMONGUS);
 	  			BSP_LCD_SelectLayer(1);
 	  			xSemaphoreGive(mutexScreenHandle);
-	  			 score += 1;
+	  			 score += vitesse;
 	  			/* definition and creation of TacheEpee */
 	  			  osThreadDef(TacheEpee, obj_sword, osPriorityNormal, 0, 1024);
 	  			  TacheEpeeHandle = osThreadCreate(osThread(TacheEpee), NULL);

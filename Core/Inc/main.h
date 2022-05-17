@@ -101,6 +101,7 @@ void Error_Handler(void);
 #define OTG_FS_VBUS_GPIO_Port GPIOJ
 #define Audio_INT_Pin GPIO_PIN_6
 #define Audio_INT_GPIO_Port GPIOD
+#define Audio_INT_EXTI_IRQn EXTI9_5_IRQn
 #define FMC_D2_Pin GPIO_PIN_0
 #define FMC_D2_GPIO_Port GPIOD
 #define SDMMC_D3_Pin GPIO_PIN_11
@@ -177,6 +178,7 @@ void Error_Handler(void);
 #define LCD_G7_GPIO_Port GPIOK
 #define BP1_Pin GPIO_PIN_8
 #define BP1_GPIO_Port GPIOA
+#define BP1_EXTI_IRQn EXTI9_5_IRQn
 #define OSC_25M_Pin GPIO_PIN_0
 #define OSC_25M_GPIO_Port GPIOH
 #define FMC_A2_Pin GPIO_PIN_2
