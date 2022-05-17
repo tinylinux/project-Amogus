@@ -27,6 +27,9 @@
 #include "stdio.h"
 #include "HorombeRGB565.h"
 #include "Amongus.h"
+#include "AmoBloc2_Main.h"
+#include "AmoBloc2_Over.h"
+#include "AmoBloc2_Timer.h"
 #include "Block.h"
 /* USER CODE END Includes */
 
@@ -37,6 +40,10 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define JEU_ACCUEIL 0;
+#define JEU_TIMERST 1;
+#define JEU_PARTIES 2;
+#define JEU_FINPART 3;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -130,6 +137,8 @@ void CallbackLED(void const * argument);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 uint16_t score;
+uint8_t stateEtat;
+uint8_t vitesse;
 /* USER CODE END 0 */
 
 /**
@@ -139,7 +148,9 @@ uint16_t score;
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+	stateEtat = JEU_ACCUEIL;
 	score = 0;
+	vitesse = 1;
 	char text[50]={};
 	char textFromUart0[50]={};
 	static TS_StateTypeDef  TS_State;
@@ -265,7 +276,7 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 1024);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* definition and creation of AffichageHeure */
@@ -1831,7 +1842,7 @@ void obj_sword(void const * argument)
 	  BSP_LCD_SelectLayer(0);
 	  BSP_LCD_SetTextColor(LCD_COLOR_AMONGUS);
 	  BSP_LCD_FillRect(posx, posy, 30,30);
-	  posy += 1;
+	  posy += vitesse;
 	  BSP_LCD_DrawBitmap(posx, posy,(uint8_t*)Block_bmp);
 	  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
 	  BSP_LCD_SelectLayer(1);

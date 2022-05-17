@@ -65,7 +65,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Core/Inc/stm32746g_discovery.h ../Core/Inc/../../Fonts/fonts.h \
  ../Core/Inc/stm32746g_discovery_ts.h ../Core/Inc/ft5336.h \
  ../Core/Inc/ts.h ../Core/Inc/HorombeRGB565.h ../Core/Inc/Amongus.h \
- ../Core/Inc/Block.h
+ ../Core/Inc/AmoBloc2_Main.h ../Core/Inc/AmoBloc2_Over.h \
+ ../Core/Inc/AmoBloc2_Timer.h ../Core/Inc/Block.h
 
 ../Core/Inc/main.h:
 
@@ -210,5 +211,11 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Core/Inc/HorombeRGB565.h:
 
 ../Core/Inc/Amongus.h:
+
+../Core/Inc/AmoBloc2_Main.h:
+
+../Core/Inc/AmoBloc2_Over.h:
+
+../Core/Inc/AmoBloc2_Timer.h:
 
 ../Core/Inc/Block.h:
