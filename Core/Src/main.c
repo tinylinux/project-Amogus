@@ -1639,6 +1639,11 @@ void StartDefaultTask(void const * argument)
 	char text[50];
 	static uint8_t ligne = 7;
 	static TS_StateTypeDef  TS_State;
+	uint32_t potlb,potl;
+	ADC_ChannelConfTypeDef sConfig = {0};
+	sConfig.Rank = ADC_REGULAR_RANK_1;
+	sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+	potlb = 0;
   /* Infinite loop */
   for(;;)
   {
@@ -1718,8 +1723,45 @@ void StartDefaultTask(void const * argument)
 	  			}
 	  		}
 	  		break;
+	  	  case JEU_TIMERST:
+	  		sConfig.Channel = ADC_CHANNEL_7;
+	  		HAL_ADC_ConfigChannel(&hadc3, &sConfig);
+	  		HAL_ADC_Start(&hadc3);
+	  		while(HAL_ADC_PollForConversion(&hadc3, 100)!=HAL_OK);
+	  		potl = HAL_ADC_GetValue(&hadc3);
+	  		if ((potl > potlb + 50) || (potlb > potl + 50))
+	  		{
+	  			potlb = potl;
+	  			xSemaphoreTake(mutexScreenHandle,portMAX_DELAY);
+	  			BSP_LCD_SelectLayer(1);
+	  			BSP_LCD_Clear(00);
+	  			BSP_LCD_SetFont(&Font24);
+	  			BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+	  			timers = (potl/27) + 30;
+	  			sprintf(text,"Temps : %u secondes", timers);
+	  			BSP_LCD_DisplayStringAt(10,ligne*24-10,(uint8_t*) text,CENTER_MODE);
+	  			xSemaphoreGive(mutexScreenHandle);
+	  		}
+	  		BSP_TS_GetState(&TS_State);
+	  		if (TS_State.touchDetected) {
+	  			if(TS_State.touchX[0] > 410 && TS_State.touchY[0] > 205 && TS_State.touchX[0] < 470 && TS_State.touchY[0] < 260)
+	  			{
+	  			  	stateEtat = JEU_PARTIES;
+	  			}
+	  		}
+	  		  break;
 	  	  case JEU_PARTIES:
 	  		stateEtat = JEU_FINPART;
+	  		break;
+	  	  case JEU_FINPART:
+	  		BSP_TS_GetState(&TS_State);
+	  		if (TS_State.touchDetected) {
+	  			if(TS_State.touchX[0] > 410 && TS_State.touchY[0] > 205 && TS_State.touchX[0] < 470 && TS_State.touchY[0] < 260)
+	  			{
+	  			  stateEtat = JEU_ACCUEIL;
+	  			}
+	  		}
+	  		break;
 	  }
     osDelay(1);
   }
