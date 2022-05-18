@@ -1721,6 +1721,12 @@ void StartDefaultTask(void const * argument)
 		  		  vitesse = 1;
 		  		  parties++;
 		  		  score = 0;
+		  		  xSemaphoreTake(mutexScreenHandle,portMAX_DELAY);
+		  		  BSP_LCD_SelectLayer(1);
+		  		  BSP_LCD_Clear(00);
+		  		  BSP_LCD_SelectLayer(0);
+		  		  BSP_LCD_Clear(LCD_COLOR_AMONGUS);
+		  		  xSemaphoreGive(mutexScreenHandle);
 		  		  if (timed) {
 		  			  	TimerAffichageHandle = osTimerCreate(osTimer(TimerAffichage), osTimerOnce, NULL);
 		  				osTimerStart(TimerAffichageHandle,1000*timers);
@@ -1873,6 +1879,11 @@ void displayGame(void const * argument)
 	int8_t derive;
 	uint32_t sword;
 	uint16_t col;
+	xSemaphoreTake(mutexScreenHandle,portMAX_DELAY);
+	BSP_LCD_SelectLayer(1);
+	BSP_LCD_DrawBitmap(amongx, amongy,(uint8_t*)Amongus_bmp);
+	BSP_LCD_SelectLayer(1);
+	xSemaphoreGive(mutexScreenHandle);
   /* Infinite loop */
   for(;;)
   {
